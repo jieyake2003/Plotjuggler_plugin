@@ -26,11 +26,15 @@ set(PJ_INCLUDE_DIRS
 
 # ---- Qt Dependencies ----
 find_package(Qt5 REQUIRED COMPONENTS Core Gui Widgets PrintSupport Svg Xml)
-
+# ---- Generate MOC for PlotJuggler base classes ----
+qt5_wrap_cpp(PJ_MOC_SRC
+    ${PLOTJUGGLER_SOURCE_DIR}/include/PlotJuggler/statepublisher_base.h
+)
 # ---- Build the Plugin ----
 add_library(${PROJECT_NAME} SHARED
     cell_voltage_bar_plugin.h
     cell_voltage_bar_plugin.cpp
+    ${PJ_MOC_SRC}
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE
