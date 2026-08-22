@@ -1,20 +1,23 @@
 name: Build PlotJuggler Plugin
 
 on:
-  workflow_dispatch:    # 手动触发
+  workflow_dispatch:
   push:
     branches: [ main ]
 
 jobs:
   build:
-    runs-on: windows-latest
+    runs-on: windows-2022
     steps:
       - name: Checkout plugin source
         uses: actions/checkout@v4
 
       - name: Clone PlotJuggler 3.1.1
         run: |
-          git clone --depth 1 --branch 3.1.1 https://github.com/facontidavide/PlotJuggler.git pj_src
+          git clone --depth 1 --branch 3.1.1 --recurse-submodules https://github.com/facontidavide/PlotJuggler.git pj_src
+
+      - name: Setup MSVC
+        uses: ilammy/msvc-dev-cmd@v1
 
       - name: Setup Qt
         uses: jurplel/install-qt-action@v4
@@ -23,16 +26,17 @@ jobs:
           arch: win64_msvc2019_64
 
       - name: Build Plugin
+        shell: cmd
         run: |
           mkdir build
           cd build
-          cmake .. -DPLOTJUGGLER_SOURCE_DIR=${{ github.workspace }}/pj_src -DCMAKE_PREFIX_PATH=${{ env.Qt5_DIR }} -G "Visual Studio 17 2022" -A x64
-          cmake --build . --config Release
+          cmake .. -DPLOTJUGGLER_SOURCE_DIR=%GITHUB_WORKSPACE%\pj_src -DCMAKE_PREFIX_PATH=%Qt5_DIR% -G "NMake Makefiles" -DCMAKE_BUILD_TYPE=Release
+          cmake --build .
 
       - name: Upload DLL
         uses: actions/upload-artifact@v4
         with:
           name: cell_voltage_bar_plugin
           path: |
-            build/Release/cell_voltage_bar_plugin.dll
-            build/Release/cell_voltage_bar_plugin.json
+            build/cell_voltage_bar_plugin.dll
+            build/cell_voltage_bar_plugin.json
