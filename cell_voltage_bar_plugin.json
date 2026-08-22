@@ -1,0 +1,7 @@
+{
+  "name": "Cell Voltage Bar Chart",
+  "description": "Voltage inspection bar chart for Cell 0~20 with adjustable Y-axis range",
+  "version": "1.0.0",
+  "author": "Custom Plugin",
+  "type": "CustomPlotPlugin"
+}
