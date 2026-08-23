@@ -7,17 +7,20 @@ on:
 
 jobs:
   build:
-    runs-on: windows-2022
+    # 关键：用 windows-2019 确保 MSVC 2019，与 Qt msvc2019_64 和本地 PJ 3.1.1 ABI 一致
+    runs-on: windows-2019
+
     steps:
       - name: Checkout plugin source
         uses: actions/checkout@v4
 
       - name: Clone PlotJuggler 3.1.1
         run: |
-          git clone --depth 1 --branch 3.1.1 --recurse-submodules https://github.com/facontidavide/PlotJuggler.git pj_src
+          git clone --depth 1 --branch v3.1.1 --recurse-submodules https://github.com/facontidavide/PlotJuggler.git pj_src
 
-      - name: Setup MSVC
+      - name: Setup MSVC environment
         uses: ilammy/msvc-dev-cmd@v1
+        # windows-2019 上默认就是 VS2019 (v142)，无需额外指定
 
       - name: Setup Qt
         uses: jurplel/install-qt-action@v4
@@ -25,12 +28,32 @@ jobs:
           version: '5.15.2'
           arch: win64_msvc2019_64
 
+      # ============================================================
+      # 关键：先编译 PlotJuggler 主程序，生成 libplotjuggler_base.lib
+      # ============================================================
+      - name: Build PlotJuggler 3.1.1 core
+        shell: cmd
+        run: |
+          cd pj_src
+          mkdir build
+          cd build
+          cmake .. -G "NMake Makefiles" -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=%Qt5_DIR%
+          cmake --build .
+
+      # ============================================================
+      # 编译插件（现在能找到 libplotjuggler_base.lib 了）
+      # ============================================================
       - name: Build Plugin
         shell: cmd
         run: |
           mkdir build
           cd build
-          cmake .. -DPLOTJUGGLER_SOURCE_DIR=%GITHUB_WORKSPACE%\pj_src -DCMAKE_PREFIX_PATH=%Qt5_DIR% -G "NMake Makefiles" -DCMAKE_BUILD_TYPE=Release
+          cmake .. ^
+            -G "NMake Makefiles" ^
+            -DCMAKE_BUILD_TYPE=Release ^
+            -DCMAKE_PREFIX_PATH=%Qt5_DIR% ^
+            -DPLOTJUGGLER_SOURCE_DIR=%GITHUB_WORKSPACE%\pj_src ^
+            -DPLOTJUGGLER_BUILD_DIR=%GITHUB_WORKSPACE%\pj_src\build
           cmake --build .
 
       - name: Upload DLL
