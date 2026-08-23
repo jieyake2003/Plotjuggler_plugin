@@ -56,6 +56,55 @@ find_package(Qt5 REQUIRED COMPONENTS Core Gui Widgets PrintSupport Svg Xml)
 qt5_wrap_cpp(PJ_MOC_SRC
     ${PLOTJUGGLER_SOURCE_DIR}/include/PlotJuggler/statepublisher_base.h
 )
+Skip to content
+Plotjuggler_plugin
+Repository navigation
+Code
+Issues
+Pull requests
+Build PlotJuggler Plugin
+Build PlotJuggler Plugin #8
+Annotations
+1 error and 1 warning
+build
+failed 1 minute ago in 1m 6s
+4s
+4s
+6s
+5s
+37s
+8s
+Run mkdir build
+CMake Deprecation Warning at CMakeLists.txt:1 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+
+
+-- The CXX compiler identification is MSVC 19.44.35228.0
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: C:/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/cl.exe - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+CMake Error at CMakeLists.txt:37 (message):
+  Cannot find libplotjuggler_base.  Did you build PlotJuggler 3.1.1 first?
+
+    Expected location: D:/a/Plotjuggler_plugin/Plotjuggler_plugin/pj_src/build
+    Set -DPLOTJUGGLER_BUILD_DIR=... to the correct build path.
+
+
+-- Configuring incomplete, errors occurred!
+NMAKE : fatal error U1052: file 'Makefile' not found
+Stop.
+Error: Process completed with exit code 2.
+0s
+0s
+1s
+0s
 
 # ---- Build the Plugin ----
 add_library(${PROJECT_NAME} SHARED
