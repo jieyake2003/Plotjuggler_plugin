@@ -6,15 +6,41 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_AUTOMOC ON)
 
 # ============================================================
-# IMPORTANT: Set this to YOUR PlotJuggler 3.1.1 source directory
+# IMPORTANT: Set this to YOUR PlotJuggler 3.1.1 source/build directory
 # ============================================================
 set(PLOTJUGGLER_SOURCE_DIR "" CACHE PATH "Path to PlotJuggler 3.1.1 source tree")
+set(PLOTJUGGLER_BUILD_DIR "" CACHE PATH "Path to PlotJuggler 3.1.1 build directory (where libplotjuggler_base.lib lives)")
 
 if(NOT PLOTJUGGLER_SOURCE_DIR OR NOT EXISTS "${PLOTJUGGLER_SOURCE_DIR}/include/PlotJuggler")
     message(FATAL_ERROR
         "Please set PLOTJUGGLER_SOURCE_DIR to the PlotJuggler 3.1.1 source directory.\n"
         "  cmake -DPLOTJUGGLER_SOURCE_DIR=C:/path/to/PlotJuggler ..")
 endif()
+
+# If PLOTJUGGLER_BUILD_DIR not set, assume it's the build subdir inside source dir
+if(NOT PLOTJUGGLER_BUILD_DIR)
+    set(PLOTJUGGLER_BUILD_DIR "${PLOTJUGGLER_SOURCE_DIR}/build")
+endif()
+
+# ---- Find PlotJuggler base library ----
+find_library(PJ_BASE_LIB
+    NAMES plotjuggler_base
+    PATHS
+        ${PLOTJUGGLER_BUILD_DIR}
+        ${PLOTJUGGLER_BUILD_DIR}/Release
+        ${PLOTJUGGLER_BUILD_DIR}/Debug
+        ${PLOTJUGGLER_SOURCE_DIR}/lib
+    NO_DEFAULT_PATH
+)
+
+if(NOT PJ_BASE_LIB)
+    message(FATAL_ERROR
+        "Cannot find libplotjuggler_base. Did you build PlotJuggler 3.1.1 first?\n"
+        "  Expected location: ${PLOTJUGGLER_BUILD_DIR}\n"
+        "  Set -DPLOTJUGGLER_BUILD_DIR=... to the correct build path.")
+endif()
+
+message(STATUS "Found PlotJuggler base library: ${PJ_BASE_LIB}")
 
 # ---- Include Paths ----
 set(PJ_INCLUDE_DIRS
@@ -30,6 +56,7 @@ find_package(Qt5 REQUIRED COMPONENTS Core Gui Widgets PrintSupport Svg Xml)
 qt5_wrap_cpp(PJ_MOC_SRC
     ${PLOTJUGGLER_SOURCE_DIR}/include/PlotJuggler/statepublisher_base.h
 )
+
 # ---- Build the Plugin ----
 add_library(${PROJECT_NAME} SHARED
     cell_voltage_bar_plugin.h
@@ -43,6 +70,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_BINARY_DIR}
 )
 
+# ---- Link libraries (NOW INCLUDES PlotJuggler base!) ----
 target_link_libraries(${PROJECT_NAME} PRIVATE
     Qt5::Core
     Qt5::Gui
@@ -50,6 +78,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     Qt5::PrintSupport
     Qt5::Svg
     Qt5::Xml
+    ${PJ_BASE_LIB}
 )
 
 # ---- Copy JSON metadata to build output ----
@@ -80,5 +109,6 @@ install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/cell_voltage_bar_plugin.json
 
 message(STATUS "=== Cell Voltage Bar Plugin ===")
 message(STATUS "  PlotJuggler source: ${PLOTJUGGLER_SOURCE_DIR}")
+message(STATUS "  PlotJuggler library: ${PJ_BASE_LIB}")
 message(STATUS "  Install directory:  ${PJ_PLUGIN_INSTALL_DIR}")
 message(STATUS "================================")
